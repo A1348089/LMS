@@ -4,8 +4,8 @@ from courses.views import *
 urlpatterns = [
 
     # Field URLS
-    path('',FieldList.as_view(),name="field-details-list"), # View all the fields
-    path('create',FieldListCreate.as_view(),name="field-details-list"),
+    path('',FieldList.as_view(),name="field-list-all"), # View all the fields
+    path('create',FieldListCreate.as_view(),name="field-create"),
     path('<int:pk>/',FieldDetail.as_view(),name="field-details"), # Access perticular field to perform CRUD 
 
     # Category URLS
