@@ -52,13 +52,23 @@ class TrueOrFalseQuestion(models.Model):
         return given_answer == self.correct_answer
 
 class Test(models.Model):
-    name = models.CharField(max_length=255)
-    questions = models.ManyToManyField(Question)
-    created_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    title = models.CharField(max_length=255)
+    topic = models.CharField(max_length=100, default="Topic")
+    description = models.CharField(max_length=500, default="description")
+    questions = models.ManyToManyField(Question, related_name='test')
+    created_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE, null=True)
+    created_on = models.DateTimeField(auto_now_add=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
+    def __str__(self):
+        return f"{self.title},' ',{self.topic},' ',{self.created_on}"
+    
 class Attempt(models.Model):
     intern = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     test = models.ForeignKey(Test, on_delete=models.CASCADE)
     answers = models.JSONField()  # Store intern's answers
     score = models.FloatField(null=True, blank=True)  # Calculated after submission
-    completed_at = models.DateTimeField(auto_now_add=True)
+    completed_on = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.intern.first_name},' ',{self.test.title},' ',{self.score}"

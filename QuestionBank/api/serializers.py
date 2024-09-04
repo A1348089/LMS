@@ -117,24 +117,56 @@ class DynamicQuestionSerializer(serializers.ModelSerializer):
         ret = super().to_representation(instance)
 
         # Add related data based on question type
-        if instance.question_type == Question.FILL_IN_THE_BLANK:
-            fill_in_the_blank_question = FillInTheBlankQuestion.objects.get(question=instance)
-            ret['fill_in_the_blank_question'] = FillInTheBlankQuestionSerializer(fill_in_the_blank_question).data
-        
-        elif instance.question_type == Question.MULTIPLE_CHOICE:
-            multiple_choice_question = MultipleChoiceQuestion.objects.get(question=instance)
-            ret['multiple_choice_question'] = MultipleChoiceQuestionSerializer(multiple_choice_question).data
-        
-        elif instance.question_type == Question.MATCH_THE_FOLLOWING:
-            match_the_following_question = MatchTheFollowingQuestion.objects.get(question=instance)
-            ret['match_the_following_question'] = MatchTheFollowingQuestionSerializer(match_the_following_question).data
-        
-        elif instance.question_type == Question.MULTIPLE_ANSWERS:
-            multiple_answer_question = MatchTheFollowingQuestion.objects.get(question=instance)
-            ret['multiple_answer_question'] = MultipleAnswerQuestionSerializer(multiple_answer_question).data
-        
-        elif instance.question_type == Question.TRUE_OR_FALSE:
-            true_or_false_question = TrueOrFalseQuestion.objects.get(question=instance)
-            ret['true_or_false_question'] = TrueOrFalseQuestionSerializer(true_or_false_question).data
+        try:
+            if instance.question_type == Question.FILL_IN_THE_BLANK:
+                if FillInTheBlankQuestion.objects.filter(question=instance).exists():
+                    fill_in_the_blank_question = FillInTheBlankQuestion.objects.get(question=instance)
+                    ret['fill_in_the_blank_question'] = FillInTheBlankQuestionSerializer(fill_in_the_blank_question).data
+                else:
+                    ret['fill_in_the_blank_question'] = None
+
+            elif instance.question_type in [Question.MULTIPLE_CHOICE, Question.MULTIPLE_ANSWERS]:
+                if MultipleChoiceQuestion.objects.filter(question=instance).exists():
+                    multiple_choice_question = MultipleChoiceQuestion.objects.get(question=instance)
+                    ret['multiple_choice_question'] = MultipleChoiceQuestionSerializer(multiple_choice_question).data
+                else:
+                    ret['multiple_choice_question'] = None
+
+            elif instance.question_type == Question.MATCH_THE_FOLLOWING:
+                if MatchTheFollowingQuestion.objects.filter(question=instance).exists():
+                    match_the_following_question = MatchTheFollowingQuestion.objects.get(question=instance)
+                    ret['match_the_following_question'] = MatchTheFollowingQuestionSerializer(match_the_following_question).data
+                else:
+                    ret['match_the_following_question'] = None
+
+            elif instance.question_type == Question.TRUE_OR_FALSE:
+                if TrueOrFalseQuestion.objects.filter(question=instance).exists():
+                    true_or_false_question = TrueOrFalseQuestion.objects.get(question=instance)
+                    ret['true_or_false_question'] = TrueOrFalseQuestionSerializer(true_or_false_question).data
+                else:
+                    ret['true_or_false_question'] = None
+
+        except MultipleChoiceQuestion.DoesNotExist:
+            ret = None
 
         return ret
+
+class TestListCreateSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Test
+        # fields = '__all__'
+        exclude = ('description', 'questions', 'created_on', 'updated_at',)
+
+class TestRetrieveSerializer(serializers.ModelSerializer):
+    questions = DynamicQuestionSerializer(many=True, required=False, read_only = True)
+    class Meta:
+        model = Test
+        fields = '__all__'
+
+class TestQuestionAddSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = Test
+        # fields = '__all__'
+        exclude = ('questions','created_on','updated_at')

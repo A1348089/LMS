@@ -41,6 +41,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
 
+    'django_filters',
+
     # # Allauth apps
     # 'django.contrib.sites',  # Required for django-allauth
     # 'allauth',

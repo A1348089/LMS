@@ -1,12 +1,16 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework import status
 
-from QuestionBank.api.serializers import (DynamicQuestionSerializer, QuestionSerializer)
+from QuestionBank.api.serializers import (DynamicQuestionSerializer, QuestionSerializer,
+                                          TestListCreateSerializer, TestRetrieveSerializer,
+                                          TestQuestionAddSerializer)
 from QuestionBank.models import (Question, FillInTheBlankQuestion,
                                  MultipleChoiceQuestion, MatchTheFollowingQuestion,
-                                 TrueOrFalseQuestion)
+                                 TrueOrFalseQuestion, Test)
 from courses.models import Course
+
 ################################## Create Question View Start ##############################
 
 class QuestionCreateView(generics.CreateAPIView):
@@ -26,6 +30,10 @@ class QuestionCreateView(generics.CreateAPIView):
         question = serializer.save()
 
         return Response({'status': 'Question created'}, status=status.HTTP_201_CREATED)
+    
+################################## Create Question View End ##############################
+
+################################## List Question View Start ##############################
 
 class QuestionListView(generics.ListAPIView):
     serializer_class = DynamicQuestionSerializer
@@ -51,6 +59,10 @@ class QuestionListView(generics.ListAPIView):
             queryset = queryset.filter(trueorfalsequestion__isnull=False)
         
         return queryset
+    
+################################## List Question View End ################################
+
+################################## RetrieveUpdateDestroy Question View Start ##############################
 
 class QuestionRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = DynamicQuestionSerializer
@@ -77,60 +89,116 @@ class QuestionRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
             queryset = queryset.filter(question_type=question_type)
         
         return queryset
-# class QuestionCreateView(generics.CreateAPIView):
-#     serializer_class = DynamicQuestionSerializer
-#     queryset = Question.objects.all()
     
-#     def perform_create(self, serializer):
-#         question_data = serializer.validated_data.get('question')
-#         question_type = question_data['question_type']
+################################## RetrieveUpdateDestroy Question View End ##############################
+
+################################## Test View Start ##############################
+
+class TestListCreateView(generics.ListCreateAPIView):
+    serializer_class = TestListCreateSerializer
+    queryset = Test.objects.all()
+################################## Test View End ##############################
+from django_filters.rest_framework import DjangoFilterBackend
+
+class AddQuestionToTestView(generics.ListCreateAPIView, QuestionListView):
+    serializer_class = DynamicQuestionSerializer
+    queryset = Question.objects.all()
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['course', 'question_type']
+
+    def get_queryset(self):
+        return QuestionListView.get_queryset(self)
+    
+    def post(self, request, *args, **kwargs):
+        test_id = self.kwargs.get('pk')
+        test_obj = get_object_or_404(Test, id=test_id)
+
+        questions_ids = request.data.get('questions_ids', [])
+        if questions_ids:
+            questions = Question.objects.filter(id__in=questions_ids)
+
+            # Add the Questions to the Test
+            for question in questions:
+                question.test.add(test_obj)
+
+            return Response({
+                "message": f"Questions added to the Test '{test_obj.title}'",
+                "Questions": [question.question_text for question in questions]
+            }, status=status.HTTP_201_CREATED)
         
-#         # Verify the question type
-#         if question_type not in [Question.FILL_IN_THE_BLANK, Question.MULTIPLE_CHOICE, 
-#                                  Question.MATCH_THE_FOLLOWING, Question.MULTIPLE_ANSWERS,
-#                                  Question.TRUE_OR_FALSE]:
-#             raise serializer.ValidationError("Invalid question type")
+        elif request.data:  # Check if there is data to serialize
+            serializer = self.get_serializer(data=request.data)
+            if serializer.is_valid():
+                # Save the new question
+                question = serializer.save()
+
+                # Map the new question to the test
+                question.test.add(test_obj)
+
+                return Response({
+                    "message": f"Question '{question.question_text}' created and added to the Test '{test_obj.title}'",
+                    "Question": question.question_text
+                }, status=status.HTTP_201_CREATED)
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
-#         # Once verified, create or get the question
-#         question, created = Question.objects.get_or_create(**question_data)
+        return Response({
+            "message": "No Questions were Added"
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    
+    # def update_or_create(self, request, serializer, *args, **kwargs):
 
-#         if question_type == Question.FILL_IN_THE_BLANK:
-#             fill_in_the_blank_data = serializer.validated_data.get('fill_in_the_blank_question')
-            
-#             FillInTheBlankQuestion.objects.create(question=question, **fill_in_the_blank_data)
+    #     test_id = self.kwargs.get('pk')
+    #     test_obj = get_object_or_404(Test, id=test_id)
 
-#         elif question_type == Question.MULTIPLE_CHOICE:
-#             multiple_choice_data = serializer.validated_data.get('multiple_choice_question')
-            
-#             MultipleChoiceQuestion.objects.create(question=question, **multiple_choice_data)
+    #     questions_ids = request.data.get('questions_ids',[])
+    #     if questions_ids:
+    #         questions = Question.objects.filter(id__in = questions_ids)
 
-#         elif question_type == Question.MATCH_THE_FOLLOWING:
-#             match_the_following_data = serializer.validated_data.get('match_the_following_question')
-            
-#             MatchTheFollowingQuestion.objects.create(question=question, **match_the_following_data)
-
-#         elif question_type == Question.MULTIPLE_ANSWERS:
-#             multiple_answer_data = serializer.validated_data.get('multiple_answer_question')
-            
-#             MultipleChoiceQuestion.objects.create(question=question, **multiple_answer_data)
-
-#         elif question_type == Question.TRUE_OR_FALSE:
-#             true_or_false_data = serializer.validated_data.get('true_or_false_question')
-            
-#             TrueOrFalseQuestion.objects.create(question=question, **true_or_false_data)
-#         else:
-#             return Response({'status':'Select Valid Question Type'}, status=status.HTTP_400_BAD_REQUEST)
+    #         # Add the Questions to the Test
+    #         for question in questions:
+    #             question.test.add(test_obj)
+    #         return Response({
+    #             "message":f"Questions added to the Test '{test_obj.title}'","Questions": [question.question_text for question in questions]},
+    #             status=status.HTTP_201_CREATED)
         
-#         # The question and its related details are only saved after verification
-#         serializer.save(question=question)
+    #     elif serializer.validated_data:
+
+    #     else:
+    #         return Response({
+    #             "message":"No Questions are Added"
+    #         },
+    #         status=status.HTTP_400_BAD_REQUEST)
         
-#         return Response({'status': 'question created'}, status=status.HTTP_201_CREATED)
 
-################################## Create Question View End ##############################
-
-################################## List Question View Start ##############################
-# class QuestionListView(generics.ListAPIView):
-#     serializer_class = DynamicQuestionSerializer
-
+# class AddQuestionToTestView(generics.ListCreateAPIView, QuestionListView):
+#     serializer_class = TestRetrieveSerializer
 #     def get_queryset(self):
-#         return Question.objects.all()
+#         test_id = self.kwargs.get('pk')
+#         return Test.objects.filter(id=test_id)
+    
+#     def create(self, request, *args, **kwargs):
+#         test_id = self.kwargs.get('pk')
+#         test_obj = get_object_or_404(Test, id=test_id)
+
+#         questions_ids = request.data.get('questions_ids',[])
+#         if questions_ids:
+#             questions = Question.objects.filter(id__in = questions_ids)
+
+#             # Add the Questions to the Test
+#             for question in questions:
+#                 question.test.add(test_obj)
+#             return Response({
+#                 "message":f"Questions added to the Test '{test_obj.title}'","Questions": [question.question_text for question in questions]},
+#                 status=status.HTTP_201_CREATED)
+#         else:
+#             return Response({
+#                 "message":"No Questions are Added"
+#             },
+#             status=status.HTTP_400_BAD_REQUEST)
+        
+class TestRetriveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = TestRetrieveSerializer
+    
+    queryset = Test.objects.all()

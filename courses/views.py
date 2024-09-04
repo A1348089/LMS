@@ -132,7 +132,6 @@ class CourseDetail(generics.RetrieveUpdateDestroyAPIView):
     # permission_classes = [AdminOrReadOnly]
     serializer_class = CourseSerializer
     def get_queryset(self):
-
         course_id = self.kwargs['pk']
         return Course.objects.filter(pk=course_id)
 ################ Course Views End ####################
