@@ -24,4 +24,5 @@ urlpatterns = [
     path('accounts/',include('accounts.api.urls')),
     path('field/',include('courses.api.urls')),
     path('api-auth',include('rest_framework.urls')),
+    
 ]
