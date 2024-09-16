@@ -5,6 +5,7 @@ from rest_framework import status
 from rest_framework import generics
 
 from courses.api.permissions import AdminOrReadOnly
+from rest_framework.permissions import IsAuthenticated
 
 from django.shortcuts import get_object_or_404
 # Create your views here.
@@ -15,6 +16,7 @@ class FieldList(generics.ListAPIView):
     queryset = Field.objects.all()
     serializer_class = FieldSerializer
     # permission_classes = [AdminOrReadOnly]
+    permission_classes = [IsAuthenticated]
 
 class FieldListCreate(generics.ListCreateAPIView):
     queryset = Field.objects.all()

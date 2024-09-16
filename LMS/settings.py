@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'accounts',
     'courses',
     'QuestionBank',
+    'Test',
 ]
 
 SITE_ID = 1
@@ -150,6 +151,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'accounts.CustomUser'
 
+DEFAULT_LOGOUT_URL = 'login'
+DEFAULT_LOGIN_URL = 'Questions'
+
 # AUTHENTICATION_BACKENDS = (
 #     'accounts.backends.CustomAuthBackend',  # Custom backend for mentor approval
 #     'django.contrib.auth.backends.ModelBackend',
@@ -162,6 +166,6 @@ REST_FRAMEWORK = {
     # 'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
 
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
     ]
 }

@@ -1,8 +1,7 @@
 from rest_framework import serializers
-from accounts.models import CustomUser
 from QuestionBank.models import (FillInTheBlankQuestion, MatchTheFollowingQuestion, 
                                  MultipleChoiceQuestion, TrueOrFalseQuestion, 
-                                 Question, Test, Attempt)
+                                 Question, Attempt)
 
 
 class QuestionSerializer(serializers.ModelSerializer):
@@ -150,23 +149,3 @@ class DynamicQuestionSerializer(serializers.ModelSerializer):
             ret = None
 
         return ret
-
-class TestListCreateSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Test
-        # fields = '__all__'
-        exclude = ('description', 'questions', 'created_on', 'updated_at',)
-
-class TestRetrieveSerializer(serializers.ModelSerializer):
-    questions = DynamicQuestionSerializer(many=True, required=False, read_only = True)
-    class Meta:
-        model = Test
-        fields = '__all__'
-
-class TestQuestionAddSerializer(serializers.ModelSerializer):
-    
-    class Meta:
-        model = Test
-        # fields = '__all__'
-        exclude = ('questions','created_on','updated_at')

@@ -20,8 +20,10 @@ from django.urls import path,include
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('Questions/',include('QuestionBank.api.urls')),
+    path('Test/',include('Test.api.urls')),
     # path('accounts/', include('allauth.urls')),  # Google Authentication via allauth
     path('accounts/',include('accounts.api.urls')),
+    
     path('field/',include('courses.api.urls')),
     path('api-auth',include('rest_framework.urls')),
     

@@ -1,4 +1,5 @@
 from django.db import models
+import Test
 from accounts.models import CustomUser
 from courses.models import Course
 # Create your models here.
@@ -50,22 +51,10 @@ class TrueOrFalseQuestion(models.Model):
 
     def check_answer(self, given_answer):
         return given_answer == self.correct_answer
-
-class Test(models.Model):
-    title = models.CharField(max_length=255)
-    topic = models.CharField(max_length=100, default="Topic")
-    description = models.CharField(max_length=500, default="description")
-    questions = models.ManyToManyField(Question, related_name='test')
-    created_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE, null=True)
-    created_on = models.DateTimeField(auto_now_add=True, null=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return f"{self.title},' ',{self.topic},' ',{self.created_on}"
     
 class Attempt(models.Model):
     intern = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-    test = models.ForeignKey(Test, on_delete=models.CASCADE)
+    #test = models.ForeignKey(Test, on_delete=models.CASCADE)
     answers = models.JSONField()  # Store intern's answers
     score = models.FloatField(null=True, blank=True)  # Calculated after submission
     completed_on = models.DateTimeField(auto_now_add=True)
