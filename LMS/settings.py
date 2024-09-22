@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     'courses',
     'QuestionBank',
     'Test',
+    'Batches'
 ]
 
 SITE_ID = 1
