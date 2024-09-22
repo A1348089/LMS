@@ -25,10 +25,7 @@ SECRET_KEY = 'django-insecure-tpfh78d@28%iph2m#v9c!v!-1tz5orp5dpn$c$=cx_@$@*=&48
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [
-    'aravind10.pythonanywhere.com',
-]
-
+ALLOWED_HOSTS = []
 
 # Application definition
 
@@ -45,7 +42,8 @@ INSTALLED_APPS = [
 
     'django_filters',
 
-    'corsheaders',
+    # 'corsheaders',
+    
     # # Allauth apps
     # 'django.contrib.sites',  # Required for django-allauth
     # 'allauth',
@@ -55,7 +53,6 @@ INSTALLED_APPS = [
     # # Social providers (e.g., Google)
     # 'allauth.socialaccount.providers.google',
      
-    # 'rest_framework.authtoken',
     # 'dj_rest_auth',
 
     'accounts',
@@ -75,8 +72,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 
-    'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.common.CommonMiddleware',
+    # 'corsheaders.middleware.CorsMiddleware',
+    # 'django.middleware.common.CommonMiddleware',
     # Allauth middleware
     # 'allauth.account.middleware.AccountMiddleware',  # Add this line
 ]

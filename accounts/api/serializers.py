@@ -137,3 +137,8 @@ class UserLoginSerializer(serializers.ModelSerializer):
 
         data['user'] = user
         return data
+
+class CustomUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ['id', 'username', 'is_mentor', 'is_intern']
