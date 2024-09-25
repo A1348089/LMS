@@ -4,3 +4,9 @@ django-restframework==0.0.1
 sqlparse==0.5.1
 typing_extensions==4.12.2
 tzdata==2024.1
+
+mentormail = mentor3@gmail.com
+password = mentor
+
+mentormail = intern@gmail.com
+password = intern

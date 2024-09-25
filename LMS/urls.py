@@ -23,7 +23,7 @@ urlpatterns = [
     path('Test/',include('Test.api.urls')),
     # path('accounts/', include('allauth.urls')),  # Google Authentication via allauth
     path('accounts/',include('accounts.api.urls')),
-    
+    path('Batches/',include('Batches.api.urls')),    
     path('field/',include('courses.api.urls')),
     path('api-auth',include('rest_framework.urls')),
     

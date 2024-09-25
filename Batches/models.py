@@ -31,10 +31,6 @@ class Batches(models.Model):
             relation.save()
 
 class BatchInternRelation(models.Model):
-    intern = models.ForeignKey(CustomUser, related_name='batch_relations', on_delete=models.CASCADE, limit_choices_to={'is_intern': True})
-    batch = models.ForeignKey(Batches, related_name='intern_relations', on_delete=models.CASCADE)
-    
-    # Relationship status between intern and batch
     PENDING = "P"
     APPROVED = "A"
     REJECTED = "R"
@@ -44,6 +40,9 @@ class BatchInternRelation(models.Model):
         (APPROVED, 'Approved'),
         (REJECTED, 'Rejected'),
     )
+    # Relationship status between intern and batch
+    intern = models.ForeignKey(CustomUser, related_name='batch_relations', on_delete=models.CASCADE, limit_choices_to={'is_intern': True})
+    batch = models.ForeignKey(Batches, related_name='intern_relations', on_delete=models.CASCADE)
     status = models.CharField(max_length=1, choices=STATUS_CHOICES, default=PENDING)
 
     def __str__(self):

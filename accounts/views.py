@@ -12,21 +12,6 @@ from rest_framework.response import Response
 
 # Create your views here.
 
-# class RegisterUserView(generics.CreateAPIView):
-#     serializer_class = UserRegistrationSerializer
-#     queryset = CustomUser.objects.all()
-
-#     def post(self, request, *args, **kwargs):
-#         serializer = self.get_serializer(data=request.data)
-
-#         if serializer.is_valid():
-#             user = serializer.save()
-#             if user.is_mentor:
-#                 return Response({"message": "Mentor registered, pending approval by admin."}, status=status.HTTP_201_CREATED)
-#             else:
-#                 return Response({"message": "Intern registered successfully."}, status=status.HTTP_201_CREATED)
-#         else:
-#             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST'])
 def user_login_view(request):
@@ -43,11 +28,13 @@ def user_login_view(request):
             return Response({
                 "message": "Login successful",
                 "token": token.key,
-                "user_id": user.id
+                "user_id": user.id,
+                "user_email":user.email,
+                "is_mentor":user.is_mentor,
+                "is_intern":user.is_intern
             }, status=status.HTTP_200_OK)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 @api_view(['POST'])
 def registration_view(request):
