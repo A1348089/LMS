@@ -11,6 +11,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 
+from django.db.models import Q
 # Create your views here.
 
 # Create a new batch or list all batches
@@ -19,8 +20,32 @@ class BatchCreateListView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return Batches.objects.filter(created_by=self.request.user)
-    
+        status = self.request.query_params.get('status', None)  # e.g., /api/batches?status=true
+        role = self.request.query_params.get('role', None)  # e.g., /api/batches?role=mentor
+        if status == 'true':
+            if role == 'owner':
+                return Batches.objects.filter(Q(created_by=self.request.user) & Q(status=True)).distinct()
+            elif role == 'mentor':
+                return Batches.objects.filter(Q(mentors__in=[self.request.user]) & Q(status=True)).distinct()
+            else:
+                return Batches.objects.filter(Q(created_by=self.request.user) & Q(status=True) | Q(mentors__in=[self.request.user]) & Q(status=True)).distinct()
+            
+        elif status == 'false':
+            if role == 'owner':
+                return Batches.objects.filter(Q(created_by=self.request.user) & Q(status=False)).distinct()
+            elif role == 'mentor':
+                return Batches.objects.filter(Q(mentors__in=[self.request.user]) & Q(status=False)).distinct()
+            else:
+                return Batches.objects.filter(Q(created_by=self.request.user) & Q(status=False) | Q(mentors__in=[self.request.user]) & Q(status=False)).distinct()
+            
+        else:
+            if role == 'owner':
+                return Batches.objects.filter(Q(created_by=self.request.user)).distinct()
+            elif role == 'mentor':
+                return Batches.objects.filter(Q(mentors__in=[self.request.user])).distinct()
+            else:
+                return Batches.objects.filter(Q(created_by=self.request.user) | Q(mentors__in=[self.request.user])).distinct()
+            
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)
 # Approve or Reject an intern request
@@ -29,7 +54,7 @@ class ApproveRejectInternView(generics.UpdateAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_object(self):
-        return get_object_or_404(Batches, pk=self.kwargs['pk'])
+        return get_object_or_404(Batches, pk=self.kwargs['pk'])    
 
     def update(self, request, *args, **kwargs):
         batch = self.get_object()
@@ -100,12 +125,44 @@ class AddRemoveMentorView(generics.RetrieveUpdateAPIView):
         else:
             return Response({"detail": "Invalid action."}, status=status.HTTP_400_BAD_REQUEST)
 
+# Add or remove mentors from a batch
+class AddRemoveInternView(generics.RetrieveUpdateAPIView):
+    serializer_class = BatchSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        return get_object_or_404(Batches, pk=self.kwargs['pk'])
+
+    def update(self, request, *args, **kwargs):
+        batch = self.get_object()
+
+        # Only the batch creator can add/remove mentors
+        if request.user in batch.mentors.all() or request.user == batch.created_by:
+
+            intern_email = request.data.get('intern_email')
+            if not intern_email:
+                return Response({"detail": "No intern email provided."}, status=status.HTTP_400_BAD_REQUEST)
+            intern = get_object_or_404(CustomUser, email=intern_email, is_mentor=False, is_intern=True)
+
+            action = request.data.get('action')
+            if action == 'add':
+                batch.interns.add(intern)
+                return Response({"detail": f"intern {intern.email} added to the batch."}, status=status.HTTP_200_OK)
+            elif action == 'remove':
+                batch.interns.remove(intern)
+                return Response({"detail": f"intern {intern.email} removed from the batch."}, status=status.HTTP_200_OK)
+            else:
+                return Response({"detail": "Invalid action."}, status=status.HTTP_400_BAD_REQUEST)
+            
+        elif request.user.all() in batch.interns:
+            return Response({"detail": "Only the batch Mentors can add or remove Interns."}, status=status.HTTP_403_FORBIDDEN)
+
 class BatchRetieveView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = BatchSerializer
     def get_queryset(self):
         # Get the logged-in user
         user = self.request.user
-        queryset = Batches.objects.filter(created_by=user)
+        queryset = Batches.objects.all()
 
         # Get query parameters
         status = self.request.query_params.get('status', None)  # e.g., /api/batches?status=true
@@ -129,5 +186,4 @@ class BatchRetieveView(generics.RetrieveUpdateDestroyAPIView):
                     models.Q(mentors=user) |
                     models.Q(interns=user)
                 )
-
         return queryset.distinct()
